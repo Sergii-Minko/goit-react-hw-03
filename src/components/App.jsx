@@ -1,67 +1,58 @@
-import "./App.css";
+import ContactList from "./ContactList/ContactList";
+import ContactForm from "./ContactForm/ContactForm";
+import SearchBox from "./SearchBox/SearchBox";
+import css from "./App.module.css";
 import { useState, useEffect } from "react";
-
-import Feedback from "./Feedback/Feedback";
-import Options from "./Options/Options";
-import Description from "./Description/Description";
-import Notification from "./Notification/Notification";
+import initialContacts from "../Data/initialContacts";
 
 export default function App() {
-  const [state, setState] = useState(() => {
-    const savedState = localStorage.getItem("feedbackState");
-    if (savedState) {
-      return JSON.parse(savedState);
-    } else {
-      return { good: 0, neutral: 0, bad: 0 };
-    }
-  });
+  const [tasks, setTasks] = useState(
+    () => JSON.parse(localStorage.getItem("ContactsState")) || initialContacts
+  );
+
   useEffect(() => {
-    localStorage.setItem("feedbackState", JSON.stringify(state));
-    console.log(state);
-  }, [state]);
+    localStorage.setItem("ContactsState", JSON.stringify(tasks));
+    console.log(tasks);
+  }, [tasks]);
 
-  const updateFeedback = (e) => {
-    const { name } = e.target;
-    if (name === "Reset") {
-      setState({ good: 0, neutral: 0, bad: 0 });
-      return;
-    }
-    setState({ ...state, [name]: state[name] + 1 });
+  const modifyphone = (number) => {
+    const stringNumber = number.toString();
+    return (
+      stringNumber.slice(0, 3) +
+      "-" +
+      stringNumber.slice(3, 5) +
+      "-" +
+      stringNumber.slice(5)
+    );
   };
 
-  const totalFeedback = ({ good, neutral, bad }) => {
-    return good + neutral + bad;
+  const [filter, setFilter] = useState("");
+
+  const addTask = ({ id, username: name, phone: number }) => {
+    number = modifyphone(number);
+    const newTask = { id, name, number };
+    console.log(newTask);
+    setTasks((prevTasks) => {
+      return [...prevTasks, newTask];
+    });
   };
-  const positiveFeedback = () => {
-    const total = totalFeedback(state);
-    if (!total) {
-      return 0;
-    }
-    return Math.round((state.good / total) * 100);
+
+  const deleteTask = (taskId) => {
+    setTasks((prevTasks) => {
+      return prevTasks.filter((task) => task.id !== taskId);
+    });
   };
+
+  const visibleTasks = tasks.filter((task) =>
+    task.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
-    <>
-      <Description
-        title="Sip Happens Café"
-        text="Please leave your feedback about our service by selecting one of the options below."
-      />
-      <Options
-        options={Object.keys(state)}
-        updateFeedback={updateFeedback}
-        total={totalFeedback(state)}
-      />
-      {totalFeedback(state) > 0 ? (
-        <Feedback
-          good={state.good}
-          neutral={state.neutral}
-          bad={state.bad}
-          total={totalFeedback(state)}
-          positivePercentage={positiveFeedback()}
-        />
-      ) : (
-        <Notification />
-      )}
-    </>
+    <div className={css.container}>
+      <h1>Phonebook</h1>
+      <ContactForm onAdd={addTask} />
+      <SearchBox value={filter} onFilter={setFilter} />
+      <ContactList contacts={visibleTasks} onDelete={deleteTask} />
+    </div>
   );
 }
