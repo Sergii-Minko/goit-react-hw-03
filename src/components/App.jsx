@@ -12,7 +12,6 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("ContactsState", JSON.stringify(tasks));
-    console.log(tasks);
   }, [tasks]);
 
   const modifyphone = (number) => {
@@ -31,7 +30,6 @@ export default function App() {
   const addTask = ({ id, username: name, phone: number }) => {
     number = modifyphone(number);
     const newTask = { id, name, number };
-    console.log(newTask);
     setTasks((prevTasks) => {
       return [...prevTasks, newTask];
     });
